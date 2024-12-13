@@ -23,6 +23,13 @@
           required
         />
       </div>
+      <small
+        class="error-message"
+        *ngIf="addMeetingForm.errors && addMeetingForm.errors['errorName']"
+      >
+        <!-- {{ addMeetingForm.errors?["errorMessage"] }} -->
+        {{ addMeetingForm.errors["errorName"] }}
+      </small>
       <div class="mb-3">
         <label for="date" class="form-label">Date</label>
         <input
@@ -36,6 +43,13 @@
           required
         />
       </div>
+      <small
+        class="error-message"
+        *ngIf="addMeetingForm.errors && addMeetingForm.errors['errorDate']"
+      >
+        <!-- {{ addMeetingForm.errors?["errorMessage"] }} -->
+        {{ addMeetingForm.errors["errorDate"] }}
+      </small>
       <div formGroupName="startTime">
         <div class="mb-3">
           <label>
@@ -96,6 +110,15 @@
         </div>
       </div>
 
+      <!-- && !addMeetingForm.errors?['errorMessage'] -->
+      <small
+        class="error-message"
+        *ngIf="addMeetingForm.errors && addMeetingForm.errors['TimeError']"
+      >
+        <!-- {{ addMeetingForm.errors?["errorMessage"] }} -->
+        {{ addMeetingForm.errors["TimeError"] }}
+      </small>
+
       <div class="mb-3">
         <label for="description" class="form-label">Description</label>
         <textarea
@@ -110,10 +133,20 @@
         ></textarea>
       </div>
 
+      <small
+        class="error-message"
+        *ngIf="
+          addMeetingForm.errors && addMeetingForm.errors['errorDescription']
+        "
+      >
+        <!-- {{ addMeetingForm.errors?["errorMessage"] }} -->
+        {{ addMeetingForm.errors["errorDescription"] }}
+      </small>
+
       <div class="mb-3">
-        <label for="emails" class="form-label">Description</label>
+        <label for="emails" class="form-label">Emails</label>
         <input
-          type="text"
+          type="emails"
           id="emails"
           class="form-control"
           placeholder="john@example.com, @annual-day,@mark@example.com"
@@ -125,7 +158,9 @@
       </div>
 
       <div class="form-group">
-        <button class="btn btn-primary">Submit</button>
+        <button class="btn btn-primary" [disabled]="!addMeetingForm.valid">
+          Submit
+        </button>
       </div>
     </form>
   </div>

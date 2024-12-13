@@ -1,6 +1,13 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, NgForm } from '@angular/forms';
+import {
+  AbstractControl,
+  FormsModule,
+  NgForm,
+  ValidationErrors,
+} from '@angular/forms';
+
+import { JsonPipe } from '@angular/common';
 import {
   NgbDatepicker,
   NgbDateStruct,
@@ -20,6 +27,91 @@ import { AuthService } from '../../../../../common/auth/auth.service';
 import { UserService, IUser } from '../../../../../User/user.service';
 import { SessionListComponent } from '../../meetingSession/session-list/session-list.component';
 import { IAttend, IMeetBase, IMeeting } from '../../../../../Models/Model';
+
+function checkStartAndEndTime(
+  control: AbstractControl
+): ValidationErrors | null {
+  const startTimeHours = control.get('startTime')?.value.hours;
+  const startTimeMinutes = control.get('startTime')?.value.minutes;
+  const endTimeHours = control.get('endTime')?.value.hours;
+  const endTimeMinutes = control.get('endTime')?.value.minutes;
+
+  if (
+    startTimeHours * 60 + startTimeMinutes <=
+    endTimeHours * 60 + endTimeMinutes
+  )
+    return null;
+
+  return {
+    TimeError: 'Start Time is greater than end Time',
+  };
+}
+
+function NameCheck(control: AbstractControl): ValidationErrors | null {
+  const Name = control.get('name')?.value;
+
+  const regex = /^[A-Za-z0-9\s]+$/;
+
+  if (!Name) return null;
+
+  if (regex.test(Name)) return null;
+  return { errorName: 'Name should contain letters, spaces and digits' };
+}
+
+function DescriptionCheck(control: AbstractControl): ValidationErrors | null {
+  const Description = control.get('description')?.value;
+
+  const regex = /^[A-Za-z0-9\s]+$/;
+
+  if (!Description) return null;
+
+  if (regex.test(Description)) return null;
+  return {
+    errorDescription: 'Description should contain letters, spaces and digits',
+  };
+}
+
+function DateCheck(control: AbstractControl): ValidationErrors | null {
+  const date = control.get('date')?.value; // Assuming date contains the year, month, and day
+  const startTime = control.get('startTime')?.value; // Assuming start contains the hours and minutes
+  const currentDate = new Date();
+
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth(); // 0-based
+  const currentDay = currentDate.getDate();
+  const currentHour = currentDate.getHours();
+  const currentMinute = currentDate.getMinutes();
+
+  if (!date || !startTime) {
+    return null; // Handle empty or invalid data gracefully
+  }
+
+  // Compare Year, Month, and Day
+  if (date.year > currentYear) return null;
+  if (date.year === currentYear && date.month - 1 > currentMonth) return null;
+  if (
+    date.year === currentYear &&
+    date.month - 1 === currentMonth &&
+    date.day > currentDay
+  )
+    return null;
+
+  // If it's the current day, check hours and minutes
+  if (
+    date.year === currentYear &&
+    date.month - 1 === currentMonth &&
+    date.day === currentDay
+  ) {
+    // Check hours
+    if (startTime.hours > currentHour) return null;
+    // If the hour is the same, check minutes
+    if (startTime.hours === currentHour && startTime.minutes > currentMinute)
+      return null;
+  }
+
+  // If none of the above conditions are met, return an error
+  return { errorDate: `Date should be after ${currentDate}` };
+}
 
 @Component({
   selector: 'app-add-meetings',
@@ -47,20 +139,30 @@ export class AddMeetingsComponent implements OnInit {
     private authenticationService: AuthService,
     private router: Router
   ) {
-    this.addMeetingForm = this.fb.group({
-      name: ['', Validators.required],
-      date: ['', Validators.required],
-      startTime: this.fb.group({
-        hours: [0, Validators.required],
-        minutes: [0, Validators.required],
-      }),
-      endTime: this.fb.group({
-        hours: [0, Validators.required],
-        minutes: [0, Validators.required],
-      }),
-      description: ['', Validators.required],
-      emails: ['', Validators.required],
-    });
+    this.addMeetingForm = this.fb.group(
+      {
+        name: ['', Validators.required],
+        date: ['', Validators.required],
+        startTime: this.fb.group({
+          hours: [0, Validators.required],
+          minutes: [0, Validators.required],
+        }),
+        endTime: this.fb.group({
+          hours: [0, Validators.required],
+          minutes: [0, Validators.required],
+        }),
+        description: ['', Validators.required],
+        emails: ['', Validators.required],
+      },
+      {
+        validators: [
+          checkStartAndEndTime,
+          NameCheck,
+          DescriptionCheck,
+          DateCheck,
+        ],
+      }
+    );
   }
   ngOnInit(): void {}
 
